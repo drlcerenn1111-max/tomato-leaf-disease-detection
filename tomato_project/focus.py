@@ -607,177 +607,164 @@ class FocusMeasure:
         return fm_channels
     
 if __name__ == '__main__':
-    vector = []
-    files = FocusMeasure.get_all_images("train/Tomato___Tomato_Yellow_Leaf_Curl_Virus")
-    
-    # Tüm fonksiyonlar için sütun isimlerini oluşturma
+
+    # ----------------------------------------------------------------
+    # Etiket şeması (makaledeki hiyerarşik sınıflandırmaya göre)
+    #
+    # broad_target  → Model 1 (geniş sınıflandırıcı)
+    #   0: Healthy
+    #   1: Bacterial
+    #   2: Fungal/Oomycete
+    #   3: Pest
+    #   4: Viral
+    #
+    # fungal_target → Model 2 (sadece Fungal/Oomycete alt sınıfları)
+    #   0: Early Blight
+    #   1: Late Blight
+    #   2: Leaf Mold
+    #   3: Septoria Leaf Spot
+    #   4: Target Spot
+    #  -1: Fungal değil (bu sınıf Model 2'de kullanılmaz)
+    # ----------------------------------------------------------------
+    CLASS_INFO = {
+        'Tomato___healthy':                                {'broad': 0, 'fungal': -1},
+        'Tomato___Bacterial_spot':                         {'broad': 1, 'fungal': -1},
+        'Tomato___Early_blight':                           {'broad': 2, 'fungal': 0},
+        'Tomato___Late_blight':                            {'broad': 2, 'fungal': 1},
+        'Tomato___Leaf_Mold':                              {'broad': 2, 'fungal': 2},
+        'Tomato___Septoria_leaf_spot':                     {'broad': 2, 'fungal': 3},
+        'Tomato___Target_Spot':                            {'broad': 2, 'fungal': 4},
+        'Tomato___Spider_mites Two-spotted_spider_mite':   {'broad': 3, 'fungal': -1},
+        'Tomato___Tomato_mosaic_virus':                    {'broad': 4, 'fungal': -1},
+        'Tomato___Tomato_Yellow_Leaf_Curl_Virus':          {'broad': 4, 'fungal': -1},
+    }
+
+    # Sütun isimleri (Target yerine broad_target ve fungal_target)
     columns = [
-        # 1. Brenner Gradient
-        'BrennerR', 'BrennerG', 'BrennerB', 
-        # 2. Diagonal Laplacian
+        'BrennerR', 'BrennerG', 'BrennerB',
         'DlR', 'DlG', 'DlB',
-        # 3. Energy of Gradient
         'EogR', 'EogG', 'EogB',
-        # 4. Energy of Laplacian
         'EolR', 'EolG', 'EolB',
-        # 5. Helmlis Mean Method
         'HmmR', 'HmmG', 'HmmB',
-        # 6. Histogram Entropy
         'HeR', 'HeG', 'HeB',
-        # 7. Histogram Range
         'HrR', 'HrG', 'HrB',
-        # 8. Spatial Frequency
         'SfR', 'SfG', 'SfB',
-        # 9. Tenengrad
         'TenR', 'TenG', 'TenB',
-        # 10. Tenengrad Variance
         'TvR', 'TvG', 'TvB',
-        # 11. Vollaths Correlation
         'VcR', 'VcG', 'VcB',
-        # 12. Graylevel Variance
         'GvR', 'GvG', 'GvB',
-        # 13. Graylevel Local Variance
         'GlvR', 'GlvG', 'GlvB',
-        # 14. Normalized Graylevel Variance
         'NgvR', 'NgvG', 'NgvB',
-        # 15. Thresholded Gradient
         'TgR', 'TgG', 'TgB',
-        # 16. Squared Gradient
         'SgR', 'SgG', 'SgB',
-        # 17. Modified Laplacian
         'MlR', 'MlG', 'MlB',
-        # 18. Variance of Laplacian
         'VlR', 'VlG', 'VlB',
-        # 19. Steerable Filters
         'StR', 'StG', 'StB',
-        # Hedef sınıf
-        'Target'
+        'broad_target',   # Model 1: 0=Healthy, 1=Bacterial, 2=Fungal/Oomycete, 3=Pest, 4=Viral
+        'fungal_target',  # Model 2: 0-4=Fungal alt sınıflar, -1=Fungal değil
     ]
-    
-    # Dosyaları işle
-    for image_path in tqdm(files):
-        temp = []
-        img = io.imread(image_path)
-        
-        # 1. Brenner Gradient
-        params = FocusMeasure.brenner_gradient_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 2. Diagonal Laplacian
-        params = FocusMeasure.diagonal_laplacian_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 3. Energy of Gradient
-        params = FocusMeasure.energy_of_gradient_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
 
-        # 4. Energy of Laplacian
-        params = FocusMeasure.energy_of_laplacian_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
+    all_vectors = []
 
-        # 5. Helmlis Mean Method
-        params = FocusMeasure.helmlis_mean_method_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
+    # Tüm sınıfları döngüyle işle
+    for class_folder, labels in CLASS_INFO.items():
+        folder_path = f"train/{class_folder}"
+        files = FocusMeasure.get_all_images(folder_path)
+        print(f"\n[{class_folder}] işleniyor... ({len(files)} görüntü)")
 
-        # 6. Histogram Entropy
-        params = FocusMeasure.histogram_entropy_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 7. Histogram Range
-        params = FocusMeasure.histogram_range_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 8. Spatial Frequency
-        params = FocusMeasure.spatial_frequency_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 9. Tenengrad
-        params = FocusMeasure.tenengrad_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 10. Tenengrad Variance
-        params = FocusMeasure.tenengrad_variance_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 11. Vollaths Correlation
-        params = FocusMeasure.vollaths_correlation_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 12. Graylevel Variance
-        params = FocusMeasure.graylevel_variance_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 13. Graylevel Local Variance
-        params = FocusMeasure.graylevel_local_variance_rgb(img, wsize=3)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 14. Normalized Graylevel Variance
-        params = FocusMeasure.normalized_graylevel_variance_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 15. Thresholded Gradient
-        params = FocusMeasure.thresholded_gradient_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 16. Squared Gradient
-        params = FocusMeasure.squared_gradient_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 17. Modified Laplacian
-        params = FocusMeasure.modified_laplacian_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 18. Variance of Laplacian
-        params = FocusMeasure.variance_of_laplacian_rgb(img)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # 19. Steerable Filters
-        params = FocusMeasure.steerable_filters_rgb(img, wsize=11)
-        temp.append(params['R'])
-        temp.append(params['G'])
-        temp.append(params['B'])
-        
-        # Hedef sınıf (2: Early Blight)
-        temp.append(2)
-        vector.append(temp)
-    
-    # DataFrame oluştur ve CSV'ye kaydet
-    df = pd.DataFrame(vector, columns=columns)
-    df.to_csv('tomato_tomato_yellow_leaf_curl_virus_features.csv', index=False)
-   
+        for image_path in tqdm(files):
+            try:
+                temp = []
+                img = io.imread(image_path)
+
+                # 1. Brenner Gradient
+                params = FocusMeasure.brenner_gradient_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 2. Diagonal Laplacian
+                params = FocusMeasure.diagonal_laplacian_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 3. Energy of Gradient
+                params = FocusMeasure.energy_of_gradient_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 4. Energy of Laplacian
+                params = FocusMeasure.energy_of_laplacian_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 5. Helmlis Mean Method
+                params = FocusMeasure.helmlis_mean_method_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 6. Histogram Entropy
+                params = FocusMeasure.histogram_entropy_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 7. Histogram Range
+                params = FocusMeasure.histogram_range_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 8. Spatial Frequency
+                params = FocusMeasure.spatial_frequency_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 9. Tenengrad
+                params = FocusMeasure.tenengrad_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 10. Tenengrad Variance
+                params = FocusMeasure.tenengrad_variance_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 11. Vollaths Correlation
+                params = FocusMeasure.vollaths_correlation_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 12. Graylevel Variance
+                params = FocusMeasure.graylevel_variance_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 13. Graylevel Local Variance
+                params = FocusMeasure.graylevel_local_variance_rgb(img, wsize=3)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 14. Normalized Graylevel Variance
+                params = FocusMeasure.normalized_graylevel_variance_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 15. Thresholded Gradient
+                params = FocusMeasure.thresholded_gradient_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 16. Squared Gradient
+                params = FocusMeasure.squared_gradient_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 17. Modified Laplacian
+                params = FocusMeasure.modified_laplacian_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 18. Variance of Laplacian
+                params = FocusMeasure.variance_of_laplacian_rgb(img)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # 19. Steerable Filters
+                params = FocusMeasure.steerable_filters_rgb(img, wsize=11)
+                temp.extend([params['R'], params['G'], params['B']])
+
+                # Etiketler
+                temp.append(labels['broad'])
+                temp.append(labels['fungal'])
+
+                all_vectors.append(temp)
+
+            except Exception as e:
+                print(f"Hata: {image_path} → {e}")
+                continue
+
+    # Tüm veriyi tek CSV'ye kaydet
+    df = pd.DataFrame(all_vectors, columns=columns)
+    df.to_csv('tomato_all_features.csv', index=False)
+    print(f"\nTamamlandı! Toplam {len(df)} satır → tomato_all_features.csv")
+    print(df['broad_target'].value_counts().sort_index())
