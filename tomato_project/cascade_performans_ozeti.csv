@@ -1,10 +1,10 @@
-Aşama,Sınıf,En İyi Model,CV_MCC,Accuracy,Sensitivity,Specificity,MCC
-1,0 (Healthy),SVM,0.9466,0.992,0.935,0.9983,0.9549
-2,1 (Bacterial Spot),Random Forest,0.7485,0.9561,0.645,0.995,0.7585
-3,2 (Early Blight),Random Forest,0.6588,0.9313,0.61,0.9771,0.6584
-4,3 (Late Blight),LDA,0.8156,0.9571,0.765,0.9892,0.8163
-5,4 (Leaf Mold),Random Forest,0.7989,0.9525,0.735,0.996,0.8214
-6,5 (Septoria Leaf Spot),LDA,0.8556,0.969,0.88,0.9912,0.9013
-7,6 (Spider Mites),LDA,0.7816,0.9187,0.84,0.945,0.7837
-8,7 (Target Spot),LDA,0.9361,0.9717,0.925,0.995,0.9363
-9,8 (Mosaic Virus),Ridge,1.0,1.0,1.0,1.0,1.0
+Asama,Sinif,En Iyi Model,CV_MCC,Accuracy,Sensitivity,Specificity,F1,MCC
+1,0 (Healthy),SVM,0.9466,0.992,0.935,0.9983,0.959,0.9549
+2,1 (Bacterial Spot),Random Forest,0.7485,0.9561,0.645,0.995,0.7656,0.7585
+3,2 (Early Blight),Random Forest,0.6588,0.9313,0.61,0.9771,0.6893,0.6584
+4,3 (Late Blight),LDA,0.8156,0.9571,0.765,0.9892,0.8361,0.8163
+5,4 (Leaf Mold),Random Forest,0.7989,0.9525,0.735,0.996,0.8376,0.8214
+6,5 (Septoria Leaf Spot),LDA,0.8556,0.969,0.88,0.9912,0.9191,0.9013
+7,6 (Spider Mites),LDA,0.7816,0.9187,0.84,0.945,0.8379,0.7837
+8,7 (Target Spot),LDA,0.9361,0.9717,0.925,0.995,0.9561,0.9363
+9,8 (Mosaic Virus),Ridge,1.0,1.0,1.0,1.0,1.0,1.0
